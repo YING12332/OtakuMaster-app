@@ -12,11 +12,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.otakumaster.ui.theme.OtakuMasterTheme
+import androidx.room.Room
+import com.example.otakumaster.data.db.OtakuDatabase
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val db = Room.databaseBuilder(
+            applicationContext,
+            OtakuDatabase::class.java,
+            "otaku_test.db"
+        ).build()
+
         setContent {
             OtakuMasterTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

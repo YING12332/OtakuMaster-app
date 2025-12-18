@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 *.log
+# Android Studio / IntelliJ
+.idea/
+*.iml
