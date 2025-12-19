@@ -4,7 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.example.otakumaster.data.db.dao.AnimeDao
+import com.example.otakumaster.data.db.dao.AnimeSeriesDao
+import com.example.otakumaster.data.db.dao.AnimeStatusEventDao
+import com.example.otakumaster.data.db.dao.AnimeTextEntryDao
 import com.example.otakumaster.data.db.dao.AppVersionDao
+import com.example.otakumaster.data.db.entities.AnimeEntity
+import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
+import com.example.otakumaster.data.db.entities.AnimeStatusEventEntity
+import com.example.otakumaster.data.db.entities.AnimeTextEntryEntity
 import com.example.otakumaster.data.db.entities.AppVersionEntity
 
 /**
@@ -14,14 +23,24 @@ import com.example.otakumaster.data.db.entities.AppVersionEntity
  */
 @Database(
     entities = [
-        AppVersionEntity::class // 当前阶段只注册版本表，后续会逐步加入 Anime / Text / Series 等
+        AppVersionEntity::class,        // 版本表
+        AnimeEntity::class,             // 番剧主表
+        AnimeSeriesEntity::class,       // 系列表
+        AnimeStatusEventEntity::class,  // 状态时间线表
+        AnimeTextEntryEntity::class     // 文本表
     ],
-    version = 1
+    version = 2
 )
+
+@TypeConverters(Converters::class) // tags: List<String> 需要转换器
 abstract class OtakuDatabase : RoomDatabase() {
     // 后续会在这里声明 Dao，例如 appVersionDao()
     // 版本信息表 Dao
     abstract fun appVersionDao(): AppVersionDao
+    abstract fun animeDao(): AnimeDao
+    abstract fun animeSeriesDao(): AnimeSeriesDao
+    abstract fun animeStatusEventDao(): AnimeStatusEventDao
+    abstract fun animeTextEntryDao(): AnimeTextEntryDao
 
     companion object {
         @Volatile
@@ -35,9 +54,10 @@ abstract class OtakuDatabase : RoomDatabase() {
                     context.applicationContext, // 必须用 applicationContext，避免内存泄漏
                     OtakuDatabase::class.java,
                     "otaku_master.db"
-                ).build().also {
-                    INSTANCE = it
-                }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also {INSTANCE = it}
             }
         }
     }

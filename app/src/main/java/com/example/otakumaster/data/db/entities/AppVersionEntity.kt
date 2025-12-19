@@ -28,7 +28,7 @@ data class AppVersionEntity(
     // 是否提示“非强制更新”
     // 1 = 有新版本时提示用户（默认）
     // 0 = 即使有新版本也不提示（强制更新除外）
-    val extraJson: String
+    val extraJson: String="{}"
     // 扩展字段（JSON 字符串）
     // 用于未来存放云端返回的版本信息、上次检查时间等，而不修改表结构
 )
