@@ -1,17 +1,25 @@
 package com.example.otakumaster
 
+import AppNavHost
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.rememberNavController
+import com.example.otakumaster.ui.components.AppBottomBar
+import com.example.otakumaster.ui.components.SlidingBottomBar
 import com.example.otakumaster.ui.theme.OtakuMasterTheme
 import kotlinx.coroutines.launch
 
@@ -22,21 +30,27 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch { (application as OtakuMasterApp).appVersionRepository.initOnAppStart() }
         setContent { // Compose UI 入口：后续所有页面/导航都从这里接入
             OtakuMasterTheme { // 项目主题（颜色/字体等），后续 UI 统一在这里配置
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // 基础脚手架：方便以后加底部导航/顶部栏
-                    Greeting(name = "Android", modifier = Modifier.padding(innerPadding)) // 临时占位页面：后续换成真正首页
-                }
+                MainApp()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) { // 简单可预览的 Composable：用于验证项目能正常运行
-    Text(text = "Hello $name!", modifier = modifier)
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() { // 预览用：不参与运行时逻辑
-    OtakuMasterTheme { Greeting("Android") }
+private fun MainApp(){
+    val navController= rememberNavController()
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            Box(Modifier.navigationBarsPadding()) {
+                SlidingBottomBar(navController = navController)
+            }
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding->
+        AppNavHost(
+            navController = navController,
+            modifier = Modifier.padding(innerPadding)
+        )
+    }
 }

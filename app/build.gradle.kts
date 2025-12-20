@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 
-    id("com.google.devtools.ksp") version "1.9.22-1.0.16"
+    id("com.google.devtools.ksp") version "1.9.23-1.0.20"
 
 }
 
@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -74,5 +74,16 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+
+    // 👇 Compose Navigation（底部导航 + 页面切换）
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // 👇（推荐）Compose + Lifecycle，后面 ViewModel 会用
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+
+    //Material icons图标库
+    implementation("androidx.compose.material:material-icons-extended")
+
+    implementation("androidx.compose.foundation:foundation")
 
 }
