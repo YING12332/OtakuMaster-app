@@ -22,6 +22,36 @@ class AnimeRepository(private val db: OtakuDatabase) {
     private val animeDao = db.animeDao() // 统一从数据库拿 Dao，避免到处 new
     private val statusDao = db.animeStatusEventDao() // 状态事件 Dao（时间线只新增不删除）
 
+    suspend fun listBySeriesId(
+        seriesId: String,
+        sortField: AnimeSortField = AnimeSortField.CREATED_AT,
+        sortDirection: SortDirection = SortDirection.DESC
+    ): List<AnimeEntity> {
+        val sql = StringBuilder()
+        val args = ArrayList<Any>()
+
+        sql.append("SELECT * FROM anime WHERE isDeleted = 0")
+        sql.append(" AND seriesId = ?")
+        args.add(seriesId)
+
+        // ORDER BY：白名单映射
+        val orderBy = when (sortField) {
+            AnimeSortField.CREATED_AT -> "createdAt"
+            AnimeSortField.TITLE -> "title COLLATE NOCASE"
+        }
+        val direction = when (sortDirection) {
+            SortDirection.ASC -> "ASC"
+            SortDirection.DESC -> "DESC"
+        }
+
+        sql.append(" ORDER BY ").append(orderBy).append(" ").append(direction)
+
+        val query = SimpleSQLiteQuery(sql.toString(), args.toArray())
+        return animeDao.rawQueryList(query)
+    }
+
+
+
     /**
      * 获取番剧列表（核心方法）
      * - scope=ALL：查询全部未删除番剧

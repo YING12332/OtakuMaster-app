@@ -33,6 +33,16 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+private val LightColors = lightColorScheme(
+    primary = OtakuPrimary,
+    // 其他颜色先交给默认即可；你后续有设计稿再细调
+)
+
+private val DarkColors = darkColorScheme(
+    primary = OtakuPrimary,
+)
+
+
 @Composable
 fun OtakuMasterTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -46,8 +56,8 @@ fun OtakuMasterTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> DarkColors
+        else -> LightColors
     }
 
     MaterialTheme(
