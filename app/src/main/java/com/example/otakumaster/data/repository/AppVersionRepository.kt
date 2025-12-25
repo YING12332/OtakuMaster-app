@@ -17,4 +17,12 @@ class AppVersionRepository(private val dao: AppVersionDao) {
             dao.upsert(existing.copy(lastVersionCode = existing.versionCode, versionCode = AppInfo.VERSION_CODE, versionName = AppInfo.VERSION_NAME, lastLaunchAt = now))
         }
     }
+    suspend fun get(): AppVersionEntity? = dao.get()//使其能读取到showOptionalUpdate
+
+    suspend fun markUpdateSuccessShown() {
+        val existing = dao.get() ?: return
+        // 把 lastVersionCode 同步为当前 versionCode，表示“已确认过升级提示”
+        dao.upsert(existing.copy(lastVersionCode = existing.versionCode))
+    }
+
 }

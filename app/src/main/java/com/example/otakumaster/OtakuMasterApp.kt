@@ -21,5 +21,4 @@ class OtakuMasterApp :Application(){
         // 现在什么都不用做
         // 以后可以在这里初始化日志、Repository、全局配置等
     }
-
 }
