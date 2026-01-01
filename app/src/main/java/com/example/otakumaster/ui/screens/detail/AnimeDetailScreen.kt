@@ -42,8 +42,10 @@ import androidx.navigation.NavHostController
 import com.example.otakumaster.OtakuMasterApp
 import com.example.otakumaster.data.db.entities.AnimeEntity
 import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
+import com.example.otakumaster.data.db.entities.AnimeTextEntryEntity
 import com.example.otakumaster.data.query.AnimeQueryParams
 import com.example.otakumaster.data.query.AnimeScope
+import com.example.otakumaster.utils.TimeUtils.formatDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -449,8 +451,7 @@ fun AnimeDetailScreen(
                             }
                         }
                     }
-
-                    Spacer(Modifier.height(24.dp))
+                    AnimeTextDetail(animeId)
                 }
             }
         }
@@ -679,9 +680,4 @@ private fun String.toZhStatus(): String = when (this) {
     "completed" -> "看完"
     "dropped" -> "弃番"
     else -> this
-}
-
-private fun formatDate(millis: Long): String {
-    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-    return sdf.format(Date(millis))
 }

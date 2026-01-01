@@ -22,6 +22,10 @@ class AnimeRepository(private val db: OtakuDatabase) {
     private val animeDao = db.animeDao() // 统一从数据库拿 Dao，避免到处 new
     private val statusDao = db.animeStatusEventDao() // 状态事件 Dao（时间线只新增不删除）
 
+    suspend fun getById(animeId: String): AnimeEntity? {
+        return animeDao.getById(animeId)
+    }
+
     suspend fun listBySeriesId(
         seriesId: String,
         sortField: AnimeSortField = AnimeSortField.CREATED_AT,

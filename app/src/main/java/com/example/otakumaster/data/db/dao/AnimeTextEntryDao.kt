@@ -40,6 +40,12 @@ interface AnimeTextEntryDao {
     @Query("SELECT * FROM anime_text_entry WHERE animeId = :animeId AND isDeleted = 0 ORDER BY timeAt DESC")
     suspend fun getByAnimeIdTimeDesc(animeId: String): List<AnimeTextEntryEntity> // 文本倒序：最新→最早
 
+    // ---------- 全部查询：所有番的文本（按 timeAt 排序） ----------
+    @Query("SELECT * FROM anime_text_entry WHERE isDeleted = 0 ORDER BY timeAt ASC")
+    suspend fun getAllByAnimeIdTimeAsc():List<AnimeTextEntryEntity>// 文本正序：最早→最新
+
+    @Query("SELECT * FROM anime_text_entry WHERE isDeleted = 0 ORDER BY timeAt DESC")
+    suspend fun getAllByAnimeIdTimeDesc():List<AnimeTextEntryEntity> // 文本倒序：最新→最早
     // ---------- 可选：批量软删除（当你以后做“删番=隐藏其文本”策略时很方便） ----------
 
     @Query("UPDATE anime_text_entry SET isDeleted = 1, deletedAt = :deletedAt WHERE animeId = :animeId AND isDeleted = 0")

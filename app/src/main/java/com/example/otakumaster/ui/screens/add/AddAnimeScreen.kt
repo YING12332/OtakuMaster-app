@@ -44,7 +44,7 @@ fun AddAnimeScreen(
 
     var selectedTags by remember { mutableStateOf(setOf<String>()) }
     val presetTags = remember {
-        listOf("治愈", "热血", "日常", "恋爱", "搞笑", "悬疑", "科幻", "冒险", "音乐", "运动")
+        listOf("青春", "热血", "日常", "恋爱", "搞笑", "悬疑", "催泪", "冒险", "音乐", "运动")
     }
 
     // 加入系列：当前版本锁死 false

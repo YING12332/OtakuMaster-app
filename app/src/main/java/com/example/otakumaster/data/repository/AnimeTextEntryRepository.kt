@@ -51,6 +51,10 @@ class AnimeTextEntryRepository(private val db: OtakuDatabase) {
 
     suspend fun listByAnimeTimeDesc(animeId: String): List<AnimeTextEntryEntity> = dao.getByAnimeIdTimeDesc(animeId) // 某番文本：最新→最早
 
+    suspend fun allListByAnimeTimeAsc():List<AnimeTextEntryEntity> = dao.getAllByAnimeIdTimeAsc()//全部文本：最早→最新
+
+    suspend fun allListByAnimeTimeDesc():List<AnimeTextEntryEntity> = dao.getAllByAnimeIdTimeDesc() // 全部文本：最新→最早
+
     suspend fun softDeleteText(id: String, now: Long = System.currentTimeMillis()) = dao.softDelete(id, now) // 软删除文本
 
     suspend fun restoreText(id: String) = dao.restore(id) // 恢复文本

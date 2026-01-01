@@ -55,7 +55,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
+import android.util.Log
 
+import androidx.core.content.ContextCompat
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,8 +71,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+
 @Composable
 private fun MainApp() {
+    val TAG = "UpdateFlow"
     val navController = rememberNavController()
 
     val context = LocalContext.current
@@ -153,22 +158,22 @@ private fun MainApp() {
             updateDialogVisible = shouldShow && !showUpdateSuccessDialog
 
 
-            Toast.makeText(
-                context,
-                "version ok: current=$current latest=${remote.latestVersionCode} min=${remote.minSupportedVersionCode} show=$showOptionalUpdate dialog=$updateDialogVisible",
-                Toast.LENGTH_LONG
-            ).show()
+//            Toast.makeText(
+//                context,
+//                "version ok: current=$current latest=${remote.latestVersionCode} min=${remote.minSupportedVersionCode} show=$showOptionalUpdate dialog=$updateDialogVisible",
+//                Toast.LENGTH_LONG
+//            ).show()
 
         } catch (e: Exception) {
             updateDialogVisible = false
             shouldShowUpdateDialog = false
             isForceUpdate = false
 
-            Toast.makeText(
-                context,
-                "version check failed: ${e.javaClass.simpleName}: ${e.message}",
-                Toast.LENGTH_LONG
-            ).show()
+//            Toast.makeText(
+//                context,
+//                "version check failed: ${e.javaClass.simpleName}: ${e.message}",
+//                Toast.LENGTH_LONG
+//            ).show()
         }
 
         // 后续步骤我们会基于：
@@ -183,6 +188,7 @@ private fun MainApp() {
     }
 
     fun startApkDownload(url: String, versionName: String) {
+        Log.d(TAG, "开始下载 APK: $url")
         downloadError = null
         downloadedLocalUri = null
         verifyError = null
@@ -206,6 +212,7 @@ private fun MainApp() {
         isDownloading = true
         downloadId = null
         val id = dm.enqueue(request)
+        Log.d(TAG, "下载任务已加入队列，ID: $id")
         downloadId = id
     }
 
@@ -214,6 +221,7 @@ private fun MainApp() {
         expectedSizeBytes: Long,
         expectedSha256: String?
     ): Boolean {
+        Log.d(TAG, "开始校验 APK: $localUriString")
         val uri = Uri.parse(localUriString)
 
         // 用 ContentResolver 读（file:// / content:// 都支持）
@@ -227,10 +235,12 @@ private fun MainApp() {
 
         if (actualSize <= 0L) {
             verifyError = "校验失败：无法读取文件大小"
+            Log.e(TAG, "校验失败：无法读取文件大小")
             return false
         }
         if (actualSize != expectedSizeBytes) {
             verifyError = "校验失败：文件大小不一致（实际=$actualSize, 期望=$expectedSizeBytes）"
+            Log.e(TAG, "校验失败：文件大小不一致（实际=$actualSize, 期望=$expectedSizeBytes）")
             return false
         }
 
@@ -253,21 +263,25 @@ private fun MainApp() {
 
             if (digestHex == null) {
                 verifyError = "校验失败：无法读取文件内容"
+                Log.e(TAG, "校验失败：无法读取文件内容")
                 return false
             }
             if (digestHex != expected) {
                 verifyError = "校验失败：SHA-256 不一致"
+                Log.e(TAG, "校验失败：SHA-256 不一致 (expected=$expected, actual=$digestHex)")
                 return false
             }
         }
         // 都通过
         verifyError = null
+        Log.d(TAG, "校验通过！")
         return true
     }
 
     LaunchedEffect(downloadedLocalUri) {
         val info = versionCheckResult ?: return@LaunchedEffect
         val uriStr = downloadedLocalUri ?: return@LaunchedEffect
+        Log.d(TAG, "检测到下载 URI 更新，触发校验: $uriStr")
 
         installLaunchedOnce = false  // ✅ 确保不被锁死
 
@@ -285,6 +299,7 @@ private fun MainApp() {
     }
 
     fun launchApkInstall(localUriString: String) {
+        Log.d(TAG, "启动 ACTION_VIEW 安装: $localUriString")
         val uri = Uri.parse(localUriString)
 
         val installIntent = Intent(Intent.ACTION_VIEW).apply {
@@ -307,8 +322,10 @@ private fun MainApp() {
         val s = downloadedLocalUri
         if (s.isNullOrEmpty()) {
             Toast.makeText(context, "安装失败：未找到下载文件 Uri", Toast.LENGTH_LONG).show()
+            Log.e(TAG, "安装失败：未找到下载文件 Uri")
             return
         }
+        Log.d(TAG, "启动 ACTION_INSTALL_PACKAGE 安装: $s")
         val uriToUse = Uri.parse(s)
 
         val intent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
@@ -463,6 +480,7 @@ private fun MainApp() {
     LaunchedEffect(verifiedOk) {
         if (!verifiedOk) return@LaunchedEffect
         if (downloadId == null) return@LaunchedEffect
+        Log.d(TAG, "校验成功，准备发起安装请求")
 
         ensureInstallPermissionOrOpenSettings {
             // 防止重复拉起（如果你有 installLaunchedOnce）
@@ -488,6 +506,7 @@ private fun MainApp() {
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context, intent: Intent) {
                 val completedId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
+                Log.d(TAG, "收到 DownloadManager 广播, id=$completedId (expect=$id)")
                 if (completedId != id) return
 
                 val dm = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -502,6 +521,7 @@ private fun MainApp() {
                             DownloadManager.STATUS_SUCCESSFUL -> {
                                 // ✅ 用 DownloadManager 给的 content:// Uri（安装器最认可）
                                 val contentUri = dm.getUriForDownloadedFile(id)?.toString()
+                                Log.d(TAG, "下载成功，获取 ContentUri: $contentUri")
                                 downloadedLocalUri = contentUri
                                 isDownloading = false
                             }
@@ -509,6 +529,7 @@ private fun MainApp() {
                             DownloadManager.STATUS_FAILED -> {
                                 val reason =
                                     it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                                Log.e(TAG, "下载失败，reason=$reason")
                                 downloadError = "下载失败（reason=$reason）"
                                 isDownloading = false
                             }
@@ -521,7 +542,13 @@ private fun MainApp() {
             }
         }
 
-        context.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        ContextCompat.registerReceiver(
+            context,
+            receiver,
+            filter,
+            ContextCompat.RECEIVER_EXPORTED // Android 12+ 必需，否则收不到系统广播
+        )
         onDispose { context.unregisterReceiver(receiver) }
     }
 

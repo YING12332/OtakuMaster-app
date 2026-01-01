@@ -16,3 +16,19 @@
 # Android Studio / IntelliJ
 .idea/
 *.iml
+# ===== Android build outputs =====
+**/*.apk
+**/*.aab
+
+# Gradle build folders
+**/build/
+
+# ===== Signing keys (DO NOT COMMIT) =====
+**/*.jks
+**/*.keystore
+**/*.pem
+**/*.p12
+**/*.pfx
+
+# ===== Local config =====
+**/local.properties
