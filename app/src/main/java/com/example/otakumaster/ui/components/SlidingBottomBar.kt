@@ -108,22 +108,41 @@ fun SlidingBottomBar(
         val rightStop = maxW - sliderW - w(20f)
 
         // slider offset 用 px 更稳（拖动）
-        val sliderX = remember { Animatable(with(density) { centerStop.toPx() }) }
+        val sliderX = remember {
+            val initial = when (selectedIndex) {
+                0 -> leftStop
+                1 -> centerStop
+                else -> rightStop
+            }
+            Animatable(with(density) { initial.toPx() })
+        }
 
         // 当外部切换 tab 时，滑块自动滑到对应位置
         LaunchedEffect(selectedIndex, maxW) {
+            // 如果已经在目标位置附近（说明是重组/初始化），直接 snap 避免动画
+            // 但考虑到 LaunchedEffect 是在 Composition 后执行，如果是首次进入，上面的 remember 已经处理了初始值。
+            // 只有当 selectedIndex 真正变化时才需要 animateTo。
+            
             val targetDp = when (selectedIndex) {
                 0 -> leftStop
                 1 -> centerStop
                 else -> rightStop
             }
-            sliderX.animateTo(
-                targetValue = with(density) { targetDp.toPx() },
-                animationSpec = spring(//制作弹簧效果
-                    stiffness = Spring.StiffnessMediumLow,//越大速度越快、弹性越大，越小速度越慢、越柔和
-                    dampingRatio = Spring.DampingRatioMediumBouncy//阻尼值，大于1不回弹且更慢、类似粘性，等于1不回弹但正常到达，小于1回弹且弹性越大
+            val targetPx = with(density) { targetDp.toPx() }
+
+            // 如果当前位置和目标位置差距很大（说明是切换了 tab），才播放动画
+            // 如果差距很小（说明是旋转屏幕/重组），直接 snap 或者不做
+            if (abs(sliderX.value - targetPx) > 1f) {
+                sliderX.animateTo(
+                    targetValue = targetPx,
+                    animationSpec = spring(
+                        stiffness = Spring.StiffnessMediumLow,
+                        dampingRatio = Spring.DampingRatioMediumBouncy
+                    )
                 )
-            )
+            } else {
+                sliderX.snapTo(targetPx)
+            }
         }
 
         // 背景（白底）
