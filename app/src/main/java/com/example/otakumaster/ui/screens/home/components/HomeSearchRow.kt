@@ -70,17 +70,18 @@ fun HomeSearchRow(
                 platformStyle = PlatformTextStyle(includeFontPadding = false),
                 lineHeight = 40.sp
             ),
-            modifier = Modifier.fillMaxHeight(),
+            modifier = Modifier.fillMaxHeight().weight(1f),
             cursorBrush = SolidColor(OtakuPrimary),
             decorationBox = { innerTextField ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                        .width(330.dp)
+                        .fillMaxWidth()
                         .border(
                             width = 1.dp,
                             color = Color(0xFF989898),
                             shape = RoundedCornerShape(32.dp)
                         )
+                        .padding(end = 4.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_search),
@@ -122,6 +123,8 @@ fun HomeSearchRow(
                                 tint = Color(0xFF666666)
                             )
                         }
+                    } else {
+                        Spacer(modifier = Modifier.width(32.dp)) // ✅ 保持右侧占位，布局更稳定（可选）
                     }
                 }
             }

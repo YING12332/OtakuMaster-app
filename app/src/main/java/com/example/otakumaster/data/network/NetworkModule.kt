@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 object NetworkModule {
 
     // ✅ 你后端的 baseUrl：必须以 / 结尾
-    private const val BASE_URL = "http://ying12332.top:8080/"
+    private const val BASE_URL = "http://ying12332.top/"
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
