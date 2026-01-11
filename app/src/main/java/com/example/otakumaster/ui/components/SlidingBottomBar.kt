@@ -58,7 +58,7 @@ fun SlidingBottomBar(
     modifier: Modifier = Modifier,
     themeColor: Color = Color(0xFF39C5BB),
 ) {
-    val routes = remember { listOf(AppRoute.Home, AppRoute.NewFeature, AppRoute.Profile) }
+    val routes = remember { listOf(AppRoute.Home, AppRoute.MiddlePage, AppRoute.Profile) }
 
     // 当前路由 -> 选中 index（支持外部导航变化时同步）
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -245,25 +245,25 @@ fun SlidingBottomBar(
             }
         )
 
-        // 中：备用（第二页）
+        // 中：中间页（第二页）
         BottomBarItem(
             modifier = Modifier
                 .absoluteOffset(x = centerIconX, y = 0.dp)
                 .size(itemW, itemH),
-            label = "备用",
+            label = "计划",
             color = themeColor,
             iconTop = iconTop,
             textBottom = textBottom,
             icon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_home),
-                    contentDescription = "备用",
+                    painter = painterResource(id = R.drawable.ic_time),
+                    contentDescription = "计划",
                     tint = themeColor,
                     modifier = Modifier.size(iconSize)
                 )
             },
             onClick = {
-                navController.navigate(AppRoute.NewFeature.route) {
+                navController.navigate(AppRoute.MiddlePage.route) {
                     popUpTo(navController.graph.startDestinationId) { saveState = true }
                     launchSingleTop = true
                     restoreState = true

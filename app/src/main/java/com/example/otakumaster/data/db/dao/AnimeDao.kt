@@ -44,4 +44,9 @@ interface AnimeDao {
     // 注意：Room 不支持 ORDER BY 列名/方向使用参数绑定，所以必须 RawQuery + 白名单拼 SQL
     @RawQuery(observedEntities = [AnimeEntity::class])
     suspend fun rawQueryList(query: SupportSQLiteQuery): List<AnimeEntity>
+
+    //查询所有在看的番剧信息
+    @Query("SELECT * FROM anime WHERE currentStatus='watching' AND isDeleted=0 ")
+    suspend fun getWatchingAnime():List<AnimeEntity>
+
 }

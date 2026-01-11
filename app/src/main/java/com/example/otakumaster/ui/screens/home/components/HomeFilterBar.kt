@@ -1,6 +1,5 @@
 package com.example.otakumaster.ui.screens.home.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,27 +30,17 @@ fun HomeFilterBar(
     onTabChange: (AnimeStatusTab) -> Unit,
 
     folded: Boolean,
-    onFoldChange: () -> Unit,
-
-//    sortLabel: String,
-//    sortOptions: List<String>,
-//    onSortSelected: (String) -> Unit,
-
-    modifier: Modifier = Modifier
+    onFoldChange: () -> Unit
 ) {
-//    var sortMenuExpanded by remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier
             .height(45.dp)
             .fillMaxWidth()
             .padding(start = 8.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-//        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             modifier = Modifier
-//                .background(Color(0xFF999999))
                 .weight(3f)
                 .fillMaxHeight(),
             verticalAlignment = Alignment.CenterVertically,
@@ -91,42 +77,6 @@ fun HomeFilterBar(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) { onFoldChange() })
-            /*Spacer(modifier = Modifier.width(16.dp))
-            Box {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_sort),
-                    contentDescription = "排序",
-                    tint = if (sortMenuExpanded) OtakuPrimary else Color(0xFF888888),
-                    modifier = Modifier
-                        .width(24.dp)
-                        .height(24.dp)
-                        .clickable { sortMenuExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = sortMenuExpanded,
-                    onDismissRequest = { sortMenuExpanded = false }
-                ) {
-                    // 菜单第一行：显示当前排序（可选）
-                    DropdownMenuItem(
-                        text = { Text(text = "当前：$sortLabel") },
-                        onClick = { /* 不切换，仅提示 */ }
-                    )
-
-                    // 分隔线（可选：如果你不想要，可以删掉）
-                    // DropdownMenuItem(text = { Text("—") }, onClick = {})
-
-                    sortOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                sortMenuExpanded = false
-                                onSortSelected(option)
-                            }
-                        )
-                    }
-                }
-            }*/
-
         }
     }
 }

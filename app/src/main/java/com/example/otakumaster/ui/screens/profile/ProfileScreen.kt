@@ -1,4 +1,4 @@
-package com.example.otakumaster.ui.screens
+package com.example.otakumaster.ui.screens.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun NewFeatureScreen() {
+fun ProfileScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -18,7 +18,7 @@ fun NewFeatureScreen() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "New Feature - 新功能页（占位）",
+            text = "Profile - 用户中心（占位）",
             color = MaterialTheme.colorScheme.onBackground
         )
     }

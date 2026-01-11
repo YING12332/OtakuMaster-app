@@ -41,6 +41,7 @@ import androidx.navigation.NavHostController
 import com.example.otakumaster.OtakuMasterApp
 import com.example.otakumaster.data.db.entities.AnimeEntity
 import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
+import com.example.otakumaster.ui.navigation.AppRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -286,7 +287,7 @@ fun SeriesDetailScreen(
                                     sub = anime.currentStatus.toZhStatus(),
                                     onClick = {
                                         // TODO：跳转番剧详情页
-                                        // navController.navigate(AppRoute.AnimeDetail.create(anime.id))
+                                         navController.navigate(AppRoute.AnimeDetail.create(anime.id))
                                     }
                                 )
                             }

@@ -22,8 +22,21 @@ class AnimeRepository(private val db: OtakuDatabase) {
     private val animeDao = db.animeDao() // 统一从数据库拿 Dao，避免到处 new
     private val statusDao = db.animeStatusEventDao() // 状态事件 Dao（时间线只新增不删除）
 
+    /** 获取所有在看的番剧列表*/
+    suspend fun getWatchingAnime():List<AnimeEntity>{
+        return animeDao.getWatchingAnime()
+    }
+    /** 通过ID获取番剧信息*/
     suspend fun getById(animeId: String): AnimeEntity? {
         return animeDao.getById(animeId)
+    }
+    /** 修改番剧集数*/
+    suspend fun changeEpisode(animeId: String,toEpisode:Int):Boolean{
+        val current=animeDao.getActiveById(animeId) ?: return false
+        db.withTransaction {
+            animeDao.update(current.copy(episode = toEpisode))
+        }
+        return true
     }
 
     suspend fun listBySeriesId(

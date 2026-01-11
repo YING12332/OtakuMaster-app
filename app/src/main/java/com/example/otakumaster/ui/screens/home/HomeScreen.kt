@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,10 +30,11 @@ import com.example.otakumaster.ui.screens.home.model.AnimeStatusTab
 @Composable
 fun HomeScreen(
     navController: NavHostController
+
 ) {
     var query by remember { mutableStateOf("") }//搜索框的输入内容
-    var selectedTab by remember { mutableStateOf(AnimeStatusTab.ALL) }//状态按钮的状态
-    var folded by remember { mutableStateOf(false) }//折叠按钮状态
+    var selectedTab by rememberSaveable { mutableStateOf(AnimeStatusTab.ALL) }//状态按钮的状态
+    var folded by rememberSaveable { mutableStateOf(false) }//折叠按钮状态
     var sortLabel by remember { mutableStateOf("最近更新") }//排序按钮状态
 
     val app = LocalContext.current.applicationContext as OtakuMasterApp
@@ -39,8 +42,6 @@ fun HomeScreen(
 
     var animeList by remember { mutableStateOf<List<AnimeEntity>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
-
-
 
     Column(
         modifier = Modifier

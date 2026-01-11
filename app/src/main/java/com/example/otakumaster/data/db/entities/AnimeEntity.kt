@@ -1,5 +1,6 @@
 package com.example.otakumaster.data.db.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -30,6 +31,9 @@ data class AnimeEntity(
     //软删除标记。true = 在正常列表不显示（未来回收站用）。
     val deletedAt: Long?=null,
     //软删除发生的时间（回收站排序/清理策略用）。
-    val extraJson: String="{}"
+    val extraJson: String="{}",
     //扩展兜底字段，未来新增功能但不想立刻改表结构时可以先存这里；导出/导入也能带走。
+    @ColumnInfo(defaultValue = "0")
+    val episode:Int?=0
+    //番剧当前观看集数
 )
