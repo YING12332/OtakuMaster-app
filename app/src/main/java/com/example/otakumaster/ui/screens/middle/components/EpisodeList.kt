@@ -1,10 +1,13 @@
 package com.example.otakumaster.ui.screens.middle.components
 
+import android.annotation.SuppressLint
+import android.icu.text.ListFormatter.Width
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.otakumaster.OtakuMasterApp
@@ -44,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun EpisodeList(
 
@@ -122,24 +127,33 @@ fun EpisodeList(
                             Text(text = "移动到看完")
                         }
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        NumberButton(item.id, false, 25, item.episode) { reloadWatchingAnime() }
-                        NumberButton(item.id, false, 5, item.episode) { reloadWatchingAnime() }
-                        NumberButton(item.id, false, 1, item.episode) { reloadWatchingAnime() }
-                        Text(
-                            text = item.episode.toString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        NumberButton(item.id, true, 1, item.episode) { reloadWatchingAnime() }
-                        NumberButton(item.id, true, 5, item.episode) { reloadWatchingAnime() }
-                        NumberButton(item.id, true, 25, item.episode) { reloadWatchingAnime() }
+                    BoxWithConstraints (modifier = Modifier.fillMaxWidth()){
+                        val rowWidth=maxWidth
+                        val spacing=4.dp
+                        val textWidthPlaceholder=40.dp
+                        val totalSpacing=spacing*7
+
+                        val buttonWidth=(rowWidth-totalSpacing-textWidthPlaceholder)/6
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            NumberButton(item.id, false, 25, item.episode,buttonWidth) { reloadWatchingAnime() }
+                            NumberButton(item.id, false, 5, item.episode,buttonWidth) { reloadWatchingAnime() }
+                            NumberButton(item.id, false, 1, item.episode,buttonWidth) { reloadWatchingAnime() }
+                            Text(
+                                text = item.episode.toString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            NumberButton(item.id, true, 1, item.episode,buttonWidth) { reloadWatchingAnime() }
+                            NumberButton(item.id, true, 5, item.episode,buttonWidth) { reloadWatchingAnime() }
+                            NumberButton(item.id, true, 25, item.episode,buttonWidth) { reloadWatchingAnime() }
+                        }
                     }
                 }
             }
@@ -153,6 +167,7 @@ fun NumberButton(
     isAdd: Boolean,
     number: Int,
     nowEpisode: Int?,
+    buttonWidth: Dp,
     onUpdateSuccess: () -> Unit
 ) {
     val context = LocalContext.current
@@ -174,7 +189,7 @@ fun NumberButton(
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .width(50.dp)
+            .width(if(buttonWidth>50.dp) 50.dp else buttonWidth)
             .height(30.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(OtakuPrimary.copy(alpha = 0.1f))
