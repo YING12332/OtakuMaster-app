@@ -17,8 +17,8 @@ android {
         applicationId = "com.example.otakumaster"
         minSdk = 33
         targetSdk = 34
-        versionCode = 10201
-        versionName = "1.2.1"
+        versionCode = 20001
+        versionName = "2.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

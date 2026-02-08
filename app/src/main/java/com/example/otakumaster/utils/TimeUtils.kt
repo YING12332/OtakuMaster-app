@@ -9,4 +9,7 @@ object TimeUtils {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
         return sdf.format(Date(millis))
     }
+    fun nowTime():Long{
+        return System.currentTimeMillis()
+    }
 }

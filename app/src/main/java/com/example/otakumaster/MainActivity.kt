@@ -366,7 +366,8 @@ private fun MainApp() {
         exitApp()
     }
 
-    if (showUpdateSuccessDialog) {
+    /**更新成功弹窗*/
+    /*if (showUpdateSuccessDialog) {
         AlertDialog(
             onDismissRequest = { /* 不做返回关闭，仅点确定 */ },
             title = { Text("更新成功") },
@@ -377,7 +378,7 @@ private fun MainApp() {
                 }
             }
         )
-    }
+    }*/
     if (updateDialogVisible && versionCheckResult != null) {
         val info = versionCheckResult!!
 

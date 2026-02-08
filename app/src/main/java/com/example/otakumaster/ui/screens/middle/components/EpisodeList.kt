@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.sp
 import com.example.otakumaster.OtakuMasterApp
 import com.example.otakumaster.data.db.entities.AnimeEntity
 import com.example.otakumaster.ui.theme.OtakuPrimary
+import com.example.otakumaster.utils.TimeUtils
 import com.example.otakumaster.utils.lightAndDarkColor
-import com.example.otakumaster.utils.nowTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,7 +114,7 @@ fun EpisodeList(
                                         animeRepo.changeStatus(
                                             item.id,
                                             "completed",
-                                            nowTime()
+                                            TimeUtils.nowTime()
                                         )
                                     }
                                     Toast.makeText(context,"移动成功",Toast.LENGTH_SHORT).show()

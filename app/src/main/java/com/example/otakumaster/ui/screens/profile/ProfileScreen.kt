@@ -1,5 +1,8 @@
 package com.example.otakumaster.ui.screens.profile
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -22,10 +25,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.otakumaster.MainActivity
 import com.example.otakumaster.data.backup.BackupRepository
+import com.example.otakumaster.data.db.OtakuDatabase
+import com.example.otakumaster.utils.TimeUtils
 import kotlinx.coroutines.launch
 
 private const val TAG = "ProfileScreen"
+
+private fun softRestartToMain(context: Context) {
+    val appContext = context.applicationContext
+
+    OtakuDatabase.closeInstance()
+
+    val intent = Intent(appContext, MainActivity::class.java).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+    appContext.startActivity(intent)
+
+    (context as? Activity)?.finishAffinity()
+}
 
 @Composable
 fun ProfileScreen() {
@@ -41,12 +60,11 @@ fun ProfileScreen() {
 
         AlertDialog(
             onDismissRequest = { if (!isImporting) showImportDialog = false },
-            title = { Text("最近存档：${p.createdAt.formatted}") },
+            title = { Text("最近存档：\n ${TimeUtils.formatDate(p.createdAt.timestamp)}") },
             text = {
                 Column {
-                    Text("存档时间戳：${p.createdAt.timestamp}")
                     Text("备份文件：${p.backupFile.name}")
-                    Text("\n数量对比（存档 / 本地）：")
+                    Text("\n文件对比（存档 / 本地）：")
                     Text("番剧：${p.backupStatistics.animeCount} / ${p.localStatistics.animeCount}")
                     Text("系列：${p.backupStatistics.seriesCount} / ${p.localStatistics.seriesCount}")
                     Text("事件：${p.backupStatistics.eventCount} / ${p.localStatistics.eventCount}")
@@ -63,17 +81,18 @@ fun ProfileScreen() {
                                 val result = BackupRepository.importLatestBackup(context)
                                 Toast.makeText(
                                     context,
-                                    "导入完成（backupId=${result.backupId}），请重启应用以加载新数据",
+                                    "导入完成，正在返回首页…",
                                     Toast.LENGTH_LONG
                                 ).show()
                                 showImportDialog = false
+                                softRestartToMain(context)
                             } catch (e: com.example.otakumaster.data.backup.BackupException) {
                                 Toast.makeText(context, e.userMessage, Toast.LENGTH_LONG).show()
                             } catch (e: Throwable) {
                                 Log.e(TAG, "导入发生程序错误", e)
                                 Toast.makeText(
                                     context,
-                                    "发生程序错误(${e.javaClass.simpleName})：${e.message ?: "未知错误"}",
+                                    "导入错误",
                                     Toast.LENGTH_LONG
                                 ).show()
                             } finally {
@@ -114,21 +133,21 @@ fun ProfileScreen() {
                     scope.launch {
                         try {
                             val out = BackupRepository.exportBackup(context)
-                            Toast.makeText(context, "备份已生成：${out.absolutePath}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "存档已保存", Toast.LENGTH_LONG).show()
                         } catch (e: com.example.otakumaster.data.backup.BackupException) {
                             Toast.makeText(context, e.userMessage, Toast.LENGTH_LONG).show()
                         } catch (e: Throwable) {
                             Log.e(TAG, "导出发生程序错误", e)
                             Toast.makeText(
                                 context,
-                                "发生程序错误(${e.javaClass.simpleName})：${e.message ?: "未知错误"}",
+                                "导出错误",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
                     }
                 }
             ) {
-                Text("导出备份")
+                Text("导出存档")
             }
 
             Button(
@@ -144,7 +163,7 @@ fun ProfileScreen() {
                             Log.e(TAG, "读取存档发生程序错误", e)
                             Toast.makeText(
                                 context,
-                                "发生程序错误(${e.javaClass.simpleName})：${e.message ?: "未知错误"}",
+                                "读取存档错误",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
