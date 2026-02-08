@@ -49,4 +49,6 @@ interface AnimeDao {
     @Query("SELECT * FROM anime WHERE currentStatus='watching' AND isDeleted=0 ")
     suspend fun getWatchingAnime():List<AnimeEntity>
 
+    @Query("SELECT COUNT(*) FROM anime WHERE isDeleted=0")
+    suspend fun getAnimeCount(): Long
 }

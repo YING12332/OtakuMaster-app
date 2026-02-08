@@ -50,4 +50,7 @@ interface AnimeTextEntryDao {
 
     @Query("UPDATE anime_text_entry SET isDeleted = 1, deletedAt = :deletedAt WHERE animeId = :animeId AND isDeleted = 0")
     suspend fun softDeleteByAnimeId(animeId: String, deletedAt: Long) // 批量软删除某番所有文本（可选策略）
+
+    @Query("SELECT COUNT(*) FROM anime_text_entry WHERE isDeleted=0")
+    suspend fun getAnimeTextEntryCount(): Long
 }

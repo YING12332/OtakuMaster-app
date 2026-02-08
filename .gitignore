@@ -32,3 +32,10 @@
 
 # ===== Local config =====
 **/local.properties
+
+# IDE / Tools
+.vscode/
+.trae/
+
+# Build outputs
+app/release/

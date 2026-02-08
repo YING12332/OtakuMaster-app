@@ -9,12 +9,23 @@ import com.example.otakumaster.data.repository.AnimeTextEntryRepository
 import com.example.otakumaster.data.repository.AppVersionRepository
 
 class OtakuMasterApp :Application(){
-    val database:OtakuDatabase by lazy { OtakuDatabase.get(this) }
-    val appVersionRepository: AppVersionRepository by lazy { AppVersionRepository(database.appVersionDao()) } // Repository 只依赖 Dao，不让 UI 直接碰 Room
-    val animeRepository: AnimeRepository by lazy { AnimeRepository(database) }
-    val animeSeriesRepository: AnimeSeriesRepository by lazy { AnimeSeriesRepository(database) }
-    val animeStatusEventRepository: AnimeStatusEventRepository by lazy { AnimeStatusEventRepository(database) }
-    val animeTextEntryRepository: AnimeTextEntryRepository by lazy { AnimeTextEntryRepository(database) }
+    val database: OtakuDatabase
+        get() = OtakuDatabase.get(this)
+
+    val appVersionRepository: AppVersionRepository
+        get() = AppVersionRepository(database.appVersionDao())
+
+    val animeRepository: AnimeRepository
+        get() = AnimeRepository(database)
+
+    val animeSeriesRepository: AnimeSeriesRepository
+        get() = AnimeSeriesRepository(database)
+
+    val animeStatusEventRepository: AnimeStatusEventRepository
+        get() = AnimeStatusEventRepository(database)
+
+    val animeTextEntryRepository: AnimeTextEntryRepository
+        get() = AnimeTextEntryRepository(database)
 
     override fun onCreate() {
         super.onCreate()

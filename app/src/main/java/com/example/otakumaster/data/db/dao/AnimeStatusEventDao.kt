@@ -29,4 +29,7 @@ interface AnimeStatusEventDao {
 
     @Query("SELECT COUNT(1) FROM anime_status_event WHERE animeId = :animeId")
     suspend fun countByAnimeId(animeId: String): Int // 统计某番状态变更次数（未来做统计/调试用）
+
+    @Query("SELECT COUNT(*) FROM anime_status_event")
+    suspend fun getAnimeStatusEventCount(): Long
 }

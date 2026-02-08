@@ -44,4 +44,7 @@ interface AnimeSeriesDao {
 
     @Query("SELECT COUNT(1) FROM anime_series WHERE isDeleted = 0 AND name = :name")
     suspend fun countByExactNameActive(name: String): Int // 系列名完全重复检查（未来创建系列时可用）
+
+    @Query("SELECT COUNT(*) FROM anime_series WHERE isDeleted=0")
+    suspend fun getAnimeSeriesCount(): Long
 }

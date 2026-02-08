@@ -1,5 +1,6 @@
 package com.example.otakumaster.ui.components
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -52,6 +53,7 @@ import kotlin.math.abs
  * 注意：设计稿中的 item 宽 24 / 高 38 在真实设备上会裁切文字，
  * 所以这里对 itemW 做最小兜底，itemH 用整个 barHeight 让内部按 top/bottom 定位。
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun SlidingBottomBar(
     navController: NavController,

@@ -228,4 +228,5 @@ class AnimeRepository(private val db: OtakuDatabase) {
 
         return SimpleSQLiteQuery(sql.toString(), args.toArray())
     }
+
 }

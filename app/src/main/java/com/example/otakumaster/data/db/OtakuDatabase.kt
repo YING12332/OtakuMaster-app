@@ -61,9 +61,23 @@ abstract class OtakuDatabase : RoomDatabase() {
                     OtakuDatabase::class.java,
                     "otaku_master.db"
                 )
-                    .fallbackToDestructiveMigration()
+//                    .fallbackToDestructiveMigration()
                     .build()
-                    .also {INSTANCE = it}
+                    .also { INSTANCE = it }
+            }
+        }
+
+        /**
+         * 关闭并清空 Room 单例。
+         *
+         * 导入功能会直接替换数据库文件；在替换前必须关闭连接，否则可能出现：
+         * - Windows/部分设备上文件被占用导致复制失败
+         * - 替换后仍然读到旧连接缓存的数据
+         */
+        fun closeInstance() {
+            synchronized(this) {
+                INSTANCE?.close()
+                INSTANCE = null
             }
         }
     }
