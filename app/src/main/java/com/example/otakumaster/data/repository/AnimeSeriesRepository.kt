@@ -3,6 +3,7 @@ package com.example.otakumaster.data.repository
 import com.example.otakumaster.core.IdGenerator
 import com.example.otakumaster.data.db.OtakuDatabase
 import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
+import com.example.otakumaster.utils.TimeUtils
 
 /**
  * AnimeSeriesRepository：系列表的业务入口
@@ -15,6 +16,8 @@ class AnimeSeriesRepository(private val db: OtakuDatabase) {
     suspend fun listNameAsc(): List<AnimeSeriesEntity> = dao.getAllActiveByNameAsc() // 系列列表：名字A→Z
 
     suspend fun listNameDesc(): List<AnimeSeriesEntity> = dao.getAllActiveByNameDesc() // 系列列表：名字Z→A
+
+    suspend fun listCreatedAtDesc(): List<AnimeSeriesEntity> = dao.getAllActiveByCreatedAtDesc()//系列列表：时间倒序
 
     suspend fun getById(id: String): AnimeSeriesEntity? = dao.getById(id) // 单条：不过滤删除（回收站/调试）
 
@@ -32,7 +35,8 @@ class AnimeSeriesRepository(private val db: OtakuDatabase) {
             name = name,
             isDeleted = false,
             deletedAt = null,
-            extraJson = "{}"
+            extraJson = "{}",
+            createdAt = TimeUtils.nowTime()
         )
         dao.insert(series)
         return series
@@ -48,4 +52,8 @@ class AnimeSeriesRepository(private val db: OtakuDatabase) {
     suspend fun softDeleteSeries(id: String, now: Long = System.currentTimeMillis()) = dao.softDelete(id, now) // 软删除系列
 
     suspend fun restoreSeries(id: String) = dao.restore(id) // 恢复系列
+
+    suspend fun searchSeriesListByName(keyword: String): List<AnimeSeriesEntity>{
+        return if (keyword.isBlank()) dao.getAllActiveByCreatedAtDesc() else dao.searchSeriesListByName(keyword)
+    }
 }

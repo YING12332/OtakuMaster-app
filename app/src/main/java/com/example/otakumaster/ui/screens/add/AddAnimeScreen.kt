@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.room.withTransaction
 import com.example.otakumaster.OtakuMasterApp
+import com.example.otakumaster.ui.components.SeriesQueryCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,9 +48,14 @@ fun AddAnimeScreen(
     val presetTags = remember {
         listOf("青春", "热血", "日常", "恋爱", "搞笑", "悬疑", "催泪", "冒险", "音乐", "运动")
     }
+    val events = remember { listOf("plan", "watching", "completed", "dropped") }
+    var event by remember { mutableStateOf(events[0]) }
 
-    // 加入系列：当前版本锁死 false
+    // 加入系列
     var joinSeries by remember { mutableStateOf(false) }
+    var showSeriesCard by remember { mutableStateOf(false) }
+    var seriesId by remember { mutableStateOf<String?>(null) }
+    var seriesName by remember { mutableStateOf("") }
 
     // 自定义时间
     var useCustomTime by remember { mutableStateOf(false) }
@@ -102,7 +109,8 @@ fun AddAnimeScreen(
 
                             // 计算 createdAt
                             val now = System.currentTimeMillis()
-                            val createdAt = if (useCustomTime) (customCreatedAtMillis ?: now) else now
+                            val createdAt =
+                                if (useCustomTime) (customCreatedAtMillis ?: now) else now
 
                             // 开始保存：禁用按钮
                             isSaving = true
@@ -117,10 +125,11 @@ fun AddAnimeScreen(
                                             // 1) 插入番剧（拿到 id）
                                             val anime = repo.createAnime(
                                                 title = t,
-                                                description = description.trim().ifBlank { "目前没有简介哦" },
-                                                currentStatus = "plan",             // 想看
+                                                description = description.trim()
+                                                    .ifBlank { "目前没有简介哦" },
+                                                currentStatus = event,             // 状态
                                                 tags = selectedTags.toList(),
-                                                seriesId = null,
+                                                seriesId = seriesId,
                                                 now = createdAt                      // createdAt
                                             )
 
@@ -130,11 +139,15 @@ fun AddAnimeScreen(
                                                 status = "plan",
                                                 changedAt = createdAt
                                             )
+                                            statusRepo.addEvent(
+                                                animeId = anime.id,
+                                                status = event,
+                                                changedAt = createdAt
+                                            )
 
                                             "OK"
                                         }
                                     }
-
 
                                     when (result) {
                                         "DUPLICATE" -> {
@@ -146,8 +159,10 @@ fun AddAnimeScreen(
                                             ).show()
                                             isSaving = false
                                         }
+
                                         "OK" -> {
-                                            Toast.makeText(context, "已保存", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "已保存", Toast.LENGTH_SHORT)
+                                                .show()
                                             navController.popBackStack()
                                         }
                                     }
@@ -261,7 +276,9 @@ fun AddAnimeScreen(
                         ) {
                             selectedTags.forEach { tag ->
                                 AssistChip(
-                                    onClick = { if (!isSaving) selectedTags = toggleSet(selectedTags, tag) },
+                                    onClick = {
+                                        if (!isSaving) selectedTags = toggleSet(selectedTags, tag)
+                                    },
                                     label = { Text(tag) }
                                 )
                             }
@@ -294,7 +311,7 @@ fun AddAnimeScreen(
                 ) {
                     Text("高级选项", style = MaterialTheme.typography.titleMedium)
 
-                    // 加入系列（先锁死）
+                    // 加入系列
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -303,15 +320,22 @@ fun AddAnimeScreen(
                         Column(Modifier.weight(1f)) {
                             Text("加入系列", style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                "当前版本暂不支持选择系列（后续再做）",
+                                if (seriesId != null) {
+                                    "当前：$seriesName"
+                                } else {
+                                    "默认无系列"
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Switch(
                             checked = joinSeries,
-                            onCheckedChange = { joinSeries = false },
-                            enabled = false
+                            onCheckedChange = { checked ->
+                                if (isSaving) return@Switch
+                                joinSeries = checked
+                                if (checked) showSeriesCard = true else seriesId = null
+                            }
                         )
                     }
 
@@ -353,12 +377,38 @@ fun AddAnimeScreen(
                         ) { Text("修改时间") }
                     }
 
-                    // 提示：默认状态固定想看
-                    Text(
-                        text = "提示：新建番剧将默认加入「想看」",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+//                            Text("选择状态", style = MaterialTheme.typography.bodyLarge)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(start = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                events.forEach { item ->
+                                    RadioButton(
+                                        selected = event == item,
+                                        onClick = { event = item },
+                                        modifier = Modifier.size(16.dp).padding(start = 4.dp)
+                                    )
+                                    Text(
+                                        when (item) {
+                                            "plan" -> "想看"
+                                            "watching" -> "在看"
+                                            "completed" -> "看过"
+                                            "dropped" -> "弃番"
+                                            else -> ""
+                                        },
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(start = 4.dp, end = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -428,6 +478,30 @@ fun AddAnimeScreen(
             DatePicker(state = datePickerState)
         }
     }
+
+    SeriesQueryCard(
+        visible = showSeriesCard,
+        repo = app.animeSeriesRepository,
+        nowSeriesId = null,
+        onDismiss = { showSeriesCard = false },
+        onConfirm = { seriesEntity ->
+            scope.launch {
+                try {
+                    if (seriesEntity == null) {
+                        seriesId = null
+                        joinSeries = false
+                    } else {
+                        seriesId = seriesEntity.id
+                        seriesName = app.animeSeriesRepository.getActiveById(seriesId!!)?.name
+                            ?: return@launch
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "系列保存失败", Toast.LENGTH_SHORT).show()
+                }
+            }
+            showSeriesCard = false
+        }
+    )
 }
 
 private fun toggleSet(set: Set<String>, value: String): Set<String> =

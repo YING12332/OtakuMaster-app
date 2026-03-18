@@ -40,6 +40,9 @@ interface AnimeSeriesDao {
     @Query("SELECT * FROM anime_series WHERE isDeleted = 0 ORDER BY name COLLATE NOCASE DESC")
     suspend fun getAllActiveByNameDesc(): List<AnimeSeriesEntity> // 系列列表按名字Z→A
 
+    @Query("SELECT * FROM anime_series WHERE isDeleted =0 ORDER BY createdAt DESC")
+    suspend fun getAllActiveByCreatedAtDesc(): List<AnimeSeriesEntity>//系列列表按创建时间倒序
+
     // ---------- V1 完全重复检查（系列名精确匹配，可选但建议） ----------
 
     @Query("SELECT COUNT(1) FROM anime_series WHERE isDeleted = 0 AND name = :name")
@@ -47,4 +50,7 @@ interface AnimeSeriesDao {
 
     @Query("SELECT COUNT(*) FROM anime_series WHERE isDeleted=0")
     suspend fun getAnimeSeriesCount(): Long
+
+    @Query("SELECT * FROM anime_series WHERE isDeleted=0 AND name LIKE '%' || :keyword || '%' ORDER BY name COLLATE NOCASE ASC")
+    suspend fun searchSeriesListByName(keyword: String): List<AnimeSeriesEntity>
 }

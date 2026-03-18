@@ -42,16 +42,13 @@ import androidx.navigation.NavHostController
 import com.example.otakumaster.OtakuMasterApp
 import com.example.otakumaster.data.db.entities.AnimeEntity
 import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
-import com.example.otakumaster.data.db.entities.AnimeTextEntryEntity
 import com.example.otakumaster.data.query.AnimeQueryParams
 import com.example.otakumaster.data.query.AnimeScope
+import com.example.otakumaster.ui.components.SeriesQueryCard
 import com.example.otakumaster.utils.TimeUtils.formatDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * AnimeDetailScreen：番剧详情页
@@ -82,6 +79,7 @@ fun AnimeDetailScreen(
 
     var anime by remember { mutableStateOf<AnimeEntity?>(null) }
     var seriesName by remember { mutableStateOf<String?>(null) }
+    var seriesId by remember { mutableStateOf<String?>(null) }
 
     // ---------- Edit states ----------
     var isEditing by remember { mutableStateOf(false) }
@@ -96,9 +94,6 @@ fun AnimeDetailScreen(
 
     // series picker dialog
     var showSeriesPicker by remember { mutableStateOf(false) }
-    var seriesList by remember { mutableStateOf<List<AnimeSeriesEntity>>(emptyList()) }
-    var createSeriesInput by remember { mutableStateOf("") }
-    var isSeriesLoading by remember { mutableStateOf(false) }
 
     // status menu
     var statusMenuExpanded by remember { mutableStateOf(false) }
@@ -126,6 +121,7 @@ fun AnimeDetailScreen(
                 seriesName = withContext(Dispatchers.IO) {
                     a.seriesId?.let { sid -> seriesRepo.getActiveById(sid)?.name }
                 }
+                seriesId=a.seriesId
             } else {
                 seriesName = null
             }
@@ -166,21 +162,6 @@ fun AnimeDetailScreen(
                 toast("修改状态失败：${e.message ?: "未知错误"}")
             } finally {
                 isChangingStatus = false
-            }
-        }
-    }
-
-    fun openSeriesPicker() {
-        isSeriesLoading = true
-        scope.launch {
-            try {
-                val list = withContext(Dispatchers.IO) { seriesRepo.listNameAsc() }
-                seriesList = list
-                showSeriesPicker = true
-            } catch (e: Exception) {
-                toast("加载系列失败：${e.message ?: "未知错误"}")
-            } finally {
-                isSeriesLoading = false
             }
         }
     }
@@ -382,14 +363,8 @@ fun AnimeDetailScreen(
                                 if (isEditing) {
                                     TextButton(
                                         enabled = !isSaving,
-                                        onClick = { openSeriesPicker() }
+                                        onClick = { showSeriesPicker=true}
                                     ) { Text("修改系列") }
-                                } else {
-                                    Text(
-                                        "提示：如需修改系列，请进入编辑模式",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
                                 }
                             } else {
                                 Text(
@@ -399,7 +374,7 @@ fun AnimeDetailScreen(
                                 )
                                 TextButton(
                                     enabled = !isSaving,
-                                    onClick = { openSeriesPicker() }
+                                    onClick = { showSeriesPicker=true }
                                 ) { Text("添加到系列") }
                             }
 
@@ -499,139 +474,28 @@ fun AnimeDetailScreen(
         )
     }
 
-    // ---------- 选择/创建系列弹窗 ----------
-    if (showSeriesPicker) {
-        AlertDialog(
-            onDismissRequest = { showSeriesPicker = false },
-            title = { Text("选择系列") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (!isSeriesLoading) {
-                        // ✅ 仅编辑模式下允许“修改为无系列”
-                        val canRemoveSeries = isEditing && !(anime?.seriesId.isNullOrBlank())
-
-                        if (canRemoveSeries) {
-                            TextButton(
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = {
-                                    val a = anime ?: return@TextButton
-                                    isSaving = true
-                                    showSeriesPicker = false
-                                    scope.launch {
-                                        try {
-                                            withContext(Dispatchers.IO) {
-                                                animeRepo.updateAnime(a.copy(seriesId = null))
-                                            }
-                                            toast("已移除系列")
-                                            reload()
-                                        } catch (e: Exception) {
-                                            toast("操作失败：${e.message ?: "未知错误"}")
-                                        } finally {
-                                            isSaving = false
-                                        }
-                                    }
-                                }
-                            ) {
-                                Text(
-                                    "移除系列（设为无系列）",
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                            Divider()
-                        }
+    // ---------- 系列卡片 ----------
+    SeriesQueryCard(
+        visible = showSeriesPicker,
+        repo = seriesRepo,
+        nowSeriesId=seriesId,
+        onDismiss = {showSeriesPicker = false},
+        onConfirm = {seriesEntity ->
+            scope.launch {
+                try {
+                    if (seriesEntity==null){
+                        animeRepo.updateAnime(anime?.copy(seriesId = null) ?: return@launch)
+                    }else{
+                        animeRepo.updateAnime(anime?.copy(seriesId = seriesEntity.id) ?: return@launch)
                     }
-                    if (isSeriesLoading) {
-                        Text("加载系列中…", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    } else {
-                        if (seriesList.isEmpty()) {
-                            Text(
-                                "暂无系列，你可以创建一个新的。",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-                            Text("已有系列", style = MaterialTheme.typography.titleSmall)
-                            seriesList.forEach { s ->
-                                TextButton(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = {
-                                        val a = anime ?: return@TextButton
-                                        isSaving = true
-                                        showSeriesPicker = false
-                                        scope.launch {
-                                            try {
-                                                withContext(Dispatchers.IO) {
-                                                    animeRepo.updateAnime(a.copy(seriesId = s.id))
-                                                }
-                                                toast("已加入系列：${s.name}")
-                                                createSeriesInput = ""
-                                                reload()
-                                            } catch (e: Exception) {
-                                                toast("操作失败：${e.message ?: "未知错误"}")
-                                            } finally {
-                                                isSaving = false
-                                            }
-                                        }
-                                    }
-                                ) { Text(s.name) }
-                            }
-                        }
-
-                        Divider()
-
-                        Text("创建新系列", style = MaterialTheme.typography.titleSmall)
-                        OutlinedTextField(
-                            value = createSeriesInput,
-                            onValueChange = { createSeriesInput = it },
-                            singleLine = true,
-                            label = { Text("新系列名称") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+                }catch (e: Exception){
+                    toast("保存系列失败")
                 }
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = !isSeriesLoading && createSeriesInput.trim().isNotEmpty(),
-                    onClick = {
-                        val name = createSeriesInput.trim()
-                        val a = anime ?: return@TextButton
-                        isSaving = true
-                        showSeriesPicker = false
-                        scope.launch {
-                            try {
-                                val created = withContext(Dispatchers.IO) {
-                                    val exists = seriesRepo.existsExactName(name)
-                                    if (exists) null else seriesRepo.createSeries(name)
-                                }
-                                if (created == null) {
-                                    toast("已存在同名系列，请换个名字")
-                                    isSaving = false
-                                    return@launch
-                                }
-
-                                withContext(Dispatchers.IO) {
-                                    animeRepo.updateAnime(a.copy(seriesId = created.id))
-                                }
-                                toast("已创建并加入系列：${created.name}")
-                                createSeriesInput = ""
-                                reload()
-                            } catch (e: Exception) {
-                                toast("创建失败：${e.message ?: "未知错误"}")
-                            } finally {
-                                isSaving = false
-                            }
-                        }
-                    }
-                ) { Text("创建并加入") }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !isSaving,
-                    onClick = { showSeriesPicker = false }
-                ) { Text("取消") }
+                reload()
             }
-        )
-    }
+            showSeriesPicker=false
+        }
+    )
 
     // ---------- 添加标签弹窗 ----------
     if (showTagDialog) {

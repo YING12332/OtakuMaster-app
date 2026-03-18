@@ -172,18 +172,10 @@ fun AddSeriesScreen(
                         supportingText = {
                             if (nameError != null) {
                                 Text(nameError!!, color = MaterialTheme.colorScheme.error)
-                            } else {
-                                Text("系列名将用于重复检查（完全一致才算重复）")
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isSaving
-                    )
-
-                    Text(
-                        text = "提示：后续在添加番剧时可选择加入该系列，用于首页折叠展示。",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
