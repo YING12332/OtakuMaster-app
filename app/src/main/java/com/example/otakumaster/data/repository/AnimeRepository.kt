@@ -39,6 +39,13 @@ class AnimeRepository(private val db: OtakuDatabase) {
         return true
     }
 
+    /** 删除番剧的系列*/
+    suspend fun softDelSeriesId(seriesId: String){
+        db.withTransaction {
+            animeDao.softDelSeriesId(seriesId)
+        }
+    }
+
     suspend fun listBySeriesId(
         seriesId: String,
         sortField: AnimeSortField = AnimeSortField.CREATED_AT,

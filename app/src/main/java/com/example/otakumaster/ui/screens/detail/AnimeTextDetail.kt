@@ -53,15 +53,18 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AnimeTextDetail(
-    animeId: String
+    animeId: String,
+    showAdd: Boolean
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as OtakuMasterApp
     val animeRepo = app.animeRepository
     val textRepo = app.animeTextEntryRepository
+    val seriesRepo=app.animeSeriesRepository
     val scope = rememberCoroutineScope()
 
     var animeTitle by remember { mutableStateOf("") }
+    var animeSeriesId by remember { mutableStateOf("") }
     var showAddText by remember { mutableStateOf(false) }
     var newTextInput by remember { mutableStateOf("") }
 
@@ -83,15 +86,22 @@ fun AnimeTextDetail(
                     list to title
                 }
                 textList = list
-                animeTitle = title
+                animeSeriesId=animeRepo.getById(animeId)?.seriesId ?:""
+                if(animeSeriesId.isEmpty()){
+                    animeTitle=title
+                }else{
+                    animeTitle= seriesRepo.getById(animeSeriesId)?.name ?: ""
+                }
             } catch (e: Exception) {
                 Toast.makeText(context, "痕迹获取失败", Toast.LENGTH_SHORT).show()
             }
         }
     }
     LaunchedEffect(animeId) { reloadText(animeId) }
-    TextButton(onClick = { showAddText = true }) {
-        Text(text = "添加痕迹")
+    if (showAdd){
+        TextButton(onClick = { showAddText = true }) {
+            Text(text = "添加痕迹")
+        }
     }
     textList.forEach { item ->
         Box{

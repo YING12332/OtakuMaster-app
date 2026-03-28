@@ -26,6 +26,9 @@ interface AnimeDao {
     @Query("UPDATE anime SET isDeleted = 0, deletedAt = NULL WHERE id = :id")
     suspend fun restore(id: String) // 恢复：未来回收站用
 
+    @Query("UPDATE anime SET seriesId=NULL WHERE seriesId =:seriesId AND isDeleted=0")
+    suspend fun softDelSeriesId(seriesId: String)
+
     // ---------- 单条查询 ----------
 
     @Query("SELECT * FROM anime WHERE id = :id LIMIT 1")

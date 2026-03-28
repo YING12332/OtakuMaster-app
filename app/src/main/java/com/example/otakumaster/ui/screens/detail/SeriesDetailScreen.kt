@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +43,7 @@ import androidx.navigation.NavHostController
 import com.example.otakumaster.OtakuMasterApp
 import com.example.otakumaster.data.db.entities.AnimeEntity
 import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
+import com.example.otakumaster.data.db.entities.AnimeTextEntryEntity
 import com.example.otakumaster.ui.navigation.AppRoute
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,6 +65,7 @@ fun SeriesDetailScreen(
     val app = context.applicationContext as OtakuMasterApp
     val seriesRepo = app.animeSeriesRepository
     val animeRepo = app.animeRepository
+    val textRepo=app.animeTextEntryRepository
     val scope = rememberCoroutineScope()
 
     // ---------- UI state ----------
@@ -70,6 +74,8 @@ fun SeriesDetailScreen(
 
     var series by remember { mutableStateOf<AnimeSeriesEntity?>(null) }
     var animeList by remember { mutableStateOf<List<AnimeEntity>>(emptyList()) }
+    var animeIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var seriesTextList by remember{mutableStateOf<List<AnimeTextEntryEntity>>(emptyList())}
 
     var isEditing by remember { mutableStateOf(false) }
     var nameInput by remember { mutableStateOf("") }
@@ -92,6 +98,11 @@ fun SeriesDetailScreen(
             nameInput = s?.name.orEmpty()
 
             animeList = withContext(Dispatchers.IO) { animeRepo.listBySeriesId(seriesId) }
+
+            animeIds=animeList.map { it.id }.toSet()
+            seriesTextList = withContext(Dispatchers.IO) {
+                textRepo.allListByAnimeTimeDesc().filter { it.animeId in animeIds }
+            }
         } catch (e: Exception) {
             loadError = e.message ?: "加载失败"
             series = null
@@ -117,19 +128,26 @@ fun SeriesDetailScreen(
                     ) { Text("返回") }
                 },
                 actions = {
+                    if (isEditing){
+                        TextButton(
+                            enabled = !isLoading && !isSavingName && !isDeleting && series != null,
+                            onClick = { showDeleteDialog = true }
+                        ) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                    }
                     TextButton(
                         enabled = !isLoading && !isSavingName && !isDeleting && series != null,
                         onClick = {
-                            isEditing = true
-                            nameError = null
-                            nameInput = series?.name.orEmpty()
+                            if (isEditing){
+                                isEditing = false
+                                nameError = null
+                                nameInput = series?.name.orEmpty()
+                            }else{
+                                isEditing = true
+                                nameError = null
+                                nameInput = series?.name.orEmpty()
+                            }
                         }
-                    ) { Text(if (isEditing) "编辑中" else "编辑") }
-
-                    TextButton(
-                        enabled = !isLoading && !isSavingName && !isDeleting && series != null,
-                        onClick = { showDeleteDialog = true }
-                    ) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                    ) { Text(if (isEditing) "取消" else "编辑") }
                 },
                 windowInsets = WindowInsets(0)
             )
@@ -138,6 +156,7 @@ fun SeriesDetailScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+//                .verticalScroll(rememberScrollState())
                 .fillMaxSize()
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -191,7 +210,7 @@ fun SeriesDetailScreen(
                                     style = MaterialTheme.typography.titleLarge
                                 )
                                 Text(
-                                    text = "共 ${animeList.size} 部（当前版本无法在系列中添加番剧）",
+                                    text = "共 ${animeList.size} 部",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -220,15 +239,6 @@ fun SeriesDetailScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.End
                                 ) {
-                                    TextButton(
-                                        enabled = !isSavingName && !isDeleting,
-                                        onClick = {
-                                            isEditing = false
-                                            nameError = null
-                                            nameInput = series?.name.orEmpty()
-                                        }
-                                    ) { Text("取消") }
-
                                     TextButton(
                                         enabled = !isSavingName && !isDeleting && nameInput.trim().isNotEmpty(),
                                         onClick = {
@@ -291,6 +301,7 @@ fun SeriesDetailScreen(
                                     }
                                 )
                             }
+
                         }
                     }
                 }
@@ -312,6 +323,7 @@ fun SeriesDetailScreen(
                         scope.launch {
                             try {
                                 withContext(Dispatchers.IO) {
+                                    animeRepo.softDelSeriesId(seriesId)
                                     seriesRepo.softDeleteSeries(seriesId)
                                 }
                                 toast("已删除")

@@ -426,7 +426,7 @@ fun AnimeDetailScreen(
                             }
                         }
                     }
-                    AnimeTextDetail(animeId)
+                    AnimeTextDetail(animeId,true)
                 }
             }
         }
