@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.ElevatedCard
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -65,6 +67,8 @@ fun HomeAnimeList(
     var uiItems by remember { mutableStateOf<List<HomeListItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf<String?>(null) }
+    var animeCount by remember { mutableStateOf(0) }
+    var seriesCount by remember { mutableStateOf(0) }
 
     // 自适应列数
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
@@ -86,8 +90,13 @@ fun HomeAnimeList(
         isLoading = true
         loadError = null
         try {
+            val list = withContext(Dispatchers.IO) { animeRepo.list(params) }
+            animeCount = list.size
+            val withSeriesDist = list.filter { !it.seriesId.isNullOrBlank() }.map { it.seriesId }.distinct().size
+            val withoutSeries = list.count { it.seriesId.isNullOrBlank() }
+            seriesCount = withSeriesDist + withoutSeries
+
             val built = withContext(Dispatchers.IO) {
-                val list = animeRepo.list(params)
                 buildHomeListItems(
                     animeList = list,
                     folded = folded,
@@ -100,6 +109,8 @@ fun HomeAnimeList(
         } catch (e: Exception) {
             loadError = e.message ?: "加载失败"
             uiItems = emptyList()
+            animeCount = 0
+            seriesCount = 0
         } finally {
             isLoading = false
         }
@@ -120,37 +131,59 @@ fun HomeAnimeList(
         return
     }
 
-    if (uiItems.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("暂无番剧", color = MaterialTheme.colorScheme.onBackground)
-        }
-        return
-    }
-
     // Grid 渲染两种 item
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(12.dp),
+        contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(uiItems, key = { it.key }) { item ->
-            when (item) {
-                is HomeListItem.Anime -> {
-                    AnimeCard(
-                        title = item.anime.title,
-                        sub = buildString { append(item.anime.currentStatus.toZhStatus()) },
-                        onClick = { onAnimeClick(item.anime.id) }
-                    )
-                }
+        // 顶部数量统计，跟随列表滚动
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "系列数:$seriesCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF999999)
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(32.dp))
+                Text(
+                    text = "番剧数:$animeCount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF999999)
+                )
+            }
+        }
 
-                is HomeListItem.Series -> {
-                    SeriesCard(
-                        title = item.seriesName,
-                        sub = "共 ${item.count} 部",
-                        onClick = { onSeriesClick(item.seriesId) }
-                    )
+        if (uiItems.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                    Text("暂无番剧", color = MaterialTheme.colorScheme.onBackground)
+                }
+            }
+        } else {
+            items(uiItems, key = { it.key }) { item ->
+                when (item) {
+                    is HomeListItem.Anime -> {
+                        AnimeCard(
+                            title = item.anime.title,
+                            sub = buildString { append(item.anime.currentStatus.toZhStatus()) },
+                            onClick = { onAnimeClick(item.anime.id) }
+                        )
+                    }
+
+                    is HomeListItem.Series -> {
+                        SeriesCard(
+                            title = item.seriesName,
+                            sub = "共 ${item.count} 部",
+                            onClick = { onSeriesClick(item.seriesId) }
+                        )
+                    }
                 }
             }
         }
