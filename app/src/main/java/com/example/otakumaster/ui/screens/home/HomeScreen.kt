@@ -32,7 +32,7 @@ fun HomeScreen(
     navController: NavHostController
 
 ) {
-    var query by remember { mutableStateOf("") }//搜索框的输入内容
+    var query by rememberSaveable { mutableStateOf("") }//搜索框的输入内容
     var selectedTab by rememberSaveable { mutableStateOf(AnimeStatusTab.ALL) }//状态按钮的状态
     var folded by rememberSaveable { mutableStateOf(false) }//折叠按钮状态
     var sortLabel by remember { mutableStateOf("最近更新") }//排序按钮状态

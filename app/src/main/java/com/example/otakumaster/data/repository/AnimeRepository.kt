@@ -106,7 +106,7 @@ class AnimeRepository(private val db: OtakuDatabase) {
      */
     suspend fun createAnime(
         title: String,
-        description: String = "目前没有简介哦",
+        description: String,
         currentStatus: String,
         tags: List<String> = listOf(),
         seriesId: String? = null,
@@ -194,26 +194,33 @@ class AnimeRepository(private val db: OtakuDatabase) {
         val sql = StringBuilder()
         val args = ArrayList<Any>()
 
-        sql.append("SELECT * FROM anime WHERE isDeleted = 0") // 软删除统一在数据库层过滤，前端不易漏
+        // 使用 LEFT JOIN 获取该番剧当前状态的最新变更时间，用于排序
+        sql.append("SELECT a.* FROM anime a ")
+        sql.append("LEFT JOIN (")
+        sql.append("  SELECT animeId, status, MAX(changedAt) as maxChangedAt ")
+        sql.append("  FROM anime_status_event ")
+        sql.append("  GROUP BY animeId, status")
+        sql.append(") e ON a.id = e.animeId AND a.currentStatus = e.status ")
+        sql.append("WHERE a.isDeleted = 0") // 软删除统一在数据库层过滤，前端不易漏
 
         // scope：全部 or 状态内
         if (params.scope == AnimeScope.BY_STATUS) {
             val status = params.status?.value ?: error("AnimeQueryParams.scope=BY_STATUS 时必须传 status")
-            sql.append(" AND currentStatus = ?")
+            sql.append(" AND a.currentStatus = ?")
             args.add(status)
         }
 
         // keyword：模糊搜索（title LIKE %keyword%）
         val keyword = params.keyword?.trim()
         if (!keyword.isNullOrEmpty()) {
-            sql.append(" AND title LIKE ?")
+            sql.append(" AND a.title LIKE ?")
             args.add("%$keyword%") // 绑定参数，避免拼接用户输入导致注入
         }
 
         // ORDER BY：白名单映射（禁止前端传列名字符串）
         val orderBy = when (params.sortField) {
-            AnimeSortField.CREATED_AT -> "createdAt"
-            AnimeSortField.TITLE -> "title COLLATE NOCASE" // 标题排序不区分大小写，更符合用户直觉
+            AnimeSortField.CREATED_AT -> "IFNULL(e.maxChangedAt, a.createdAt)" // 优先使用该状态的最新变更时间，兜底使用创建时间
+            AnimeSortField.TITLE -> "a.title COLLATE NOCASE" // 标题排序不区分大小写，更符合用户直觉
         }
         val direction = when (params.sortDirection) {
             SortDirection.ASC -> "ASC"

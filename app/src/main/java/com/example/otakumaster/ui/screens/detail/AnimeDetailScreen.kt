@@ -327,9 +327,10 @@ fun AnimeDetailScreen(
                             Divider()
 
                             // 3) 简介
-                            Text("简介", style = MaterialTheme.typography.titleSmall)
                             if (!isEditing) {
-                                Text(a.description, style = MaterialTheme.typography.bodyMedium)
+                                Text("简介", style = MaterialTheme.typography.titleSmall)
+                                val displayDesc = a.description.ifBlank { "目前没有简介哦" }
+                                Text(displayDesc, style = MaterialTheme.typography.bodyMedium)
                             } else {
                                 OutlinedTextField(
                                     value = editDesc,
@@ -405,8 +406,7 @@ fun AnimeDetailScreen(
                                                         animeRepo.updateAnime(
                                                             a.copy(
                                                                 title = newTitle,
-                                                                description = editDesc.trim()
-                                                                    .ifBlank { "目前没有简介哦" },
+                                                                description = editDesc.trim(),
                                                                 tags = editTags.toList()
                                                             )
                                                         )
