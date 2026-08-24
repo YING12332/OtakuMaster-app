@@ -1,8 +1,12 @@
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -32,13 +36,35 @@ fun AppNavHost(
         popEnterTransition = {fadeIn(animationSpec = tween(350))}
     ) {
         composable(AppRoute.Home.route) {
-            HomeScreen(navController = navController)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 55.dp)
+            ) {
+                HomeScreen(
+                    navController = navController
+                )
+            }
         }
+
         composable(AppRoute.MiddlePage.route) {
-            MiddlePageScreen()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 55.dp)
+            ) {
+                MiddlePageScreen()
+            }
         }
+
         composable(AppRoute.Profile.route) {
-            ProfileScreen()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 55.dp)
+            ) {
+                ProfileScreen()
+            }
         }
 
         composable(AppRoute.AddAnime.route) {

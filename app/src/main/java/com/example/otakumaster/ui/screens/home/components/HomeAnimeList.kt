@@ -1,7 +1,9 @@
 package com.example.otakumaster.ui.screens.home.components
 
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.ElevatedCard
@@ -41,6 +44,7 @@ import com.example.otakumaster.data.query.AnimeSortField
 import com.example.otakumaster.data.query.AnimeStatus
 import com.example.otakumaster.data.query.SortDirection
 import com.example.otakumaster.ui.screens.home.model.AnimeStatusTab
+import com.example.otakumaster.utils.CopyToClipboard.copyTextToClipboard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -55,6 +59,7 @@ fun HomeAnimeList(
     selectedTab: AnimeStatusTab,
     query: String,
     folded: Boolean,
+    gridState: LazyGridState,
     onAnimeClick: (String) -> Unit,
     onSeriesClick: (String) -> Unit
 ) {
@@ -65,7 +70,7 @@ fun HomeAnimeList(
 
     // UI state：最终渲染用的 items（包含 Anime / Series 两种）
     var uiItems by remember { mutableStateOf<List<HomeListItem>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
     var animeCount by remember { mutableStateOf(0) }
     var seriesCount by remember { mutableStateOf(0) }
@@ -134,6 +139,7 @@ fun HomeAnimeList(
     // Grid 渲染两种 item
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
+        state = gridState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -173,7 +179,8 @@ fun HomeAnimeList(
                         AnimeCard(
                             title = item.anime.title,
                             sub = buildString { append(item.anime.currentStatus.toZhStatus()) },
-                            onClick = { onAnimeClick(item.anime.id) }
+                            onClick = { onAnimeClick(item.anime.id) },
+                            context=context
                         )
                     }
 
@@ -181,7 +188,8 @@ fun HomeAnimeList(
                         SeriesCard(
                             title = item.seriesName,
                             sub = "共 ${item.count} 部",
-                            onClick = { onSeriesClick(item.seriesId) }
+                            onClick = { onSeriesClick(item.seriesId) },
+                            context = context
                         )
                     }
                 }
@@ -236,17 +244,20 @@ private suspend fun buildHomeListItems(
 
 /** ---------- UI 卡片 ---------- */
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AnimeCard(
     title: String,
     sub: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    context: Context
 ) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.72f)
-            .clickable { onClick() }
+//            .clickable { onClick() }
+            .combinedClickable(onLongClick = { copyTextToClipboard(context,if (title.isNotBlank()) title.toString() else "")},onClick={ onClick()}),
     ) {
         Box(
             modifier = Modifier
@@ -269,17 +280,26 @@ private fun AnimeCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SeriesCard(
     title: String,
     sub: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    context: Context
 ) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.72f)
-            .clickable { onClick() }
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    if (title.isNotBlank()) {
+                        copyTextToClipboard(context, title)
+                    }
+                }
+            )
     ) {
         Box(
             modifier = Modifier
@@ -292,17 +312,22 @@ private fun SeriesCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.align(Alignment.TopStart)
             )
+
             Text(
                 text = sub,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.BottomStart)
             )
+
             Icon(
                 painter = painterResource(id = R.drawable.ic_series),
                 contentDescription = "系列",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.BottomEnd).height(10.dp).width(10.dp)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .height(10.dp)
+                    .width(10.dp)
             )
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,6 +43,9 @@ fun HomeScreen(
 
     var animeList by remember { mutableStateOf<List<AnimeEntity>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
+    
+    // 保存列表的滚动位置，必须提升到 HomeScreen 的级别
+    val gridState = rememberLazyGridState()
 
     Column(
         modifier = Modifier
@@ -81,12 +85,15 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
         ) {
             HomeAnimeList(
                 selectedTab = selectedTab,
                 query = query,
                 folded = folded,
+                gridState = gridState,
                 onAnimeClick = { animeId ->
                     navController.navigate(AppRoute.AnimeDetail.create(animeId))
                 },

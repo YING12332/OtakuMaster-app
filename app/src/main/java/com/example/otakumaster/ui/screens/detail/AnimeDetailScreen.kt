@@ -1,6 +1,8 @@
 package com.example.otakumaster.ui.screens.detail
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -45,6 +47,7 @@ import com.example.otakumaster.data.db.entities.AnimeSeriesEntity
 import com.example.otakumaster.data.query.AnimeQueryParams
 import com.example.otakumaster.data.query.AnimeScope
 import com.example.otakumaster.ui.components.SeriesQueryCard
+import com.example.otakumaster.utils.CopyToClipboard.copyTextToClipboard
 import com.example.otakumaster.utils.TimeUtils.formatDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +62,9 @@ import kotlinx.coroutines.withContext
  *   - 无系列：显示“添加到系列”按钮（不需要编辑模式）
  *   - 有系列：显示系列名；要修改系列必须进入编辑模式
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun AnimeDetailScreen(
     navController: NavHostController,
@@ -259,7 +264,12 @@ fun AnimeDetailScreen(
                         ) {
                             // 1) 标题
                             if (!isEditing) {
-                                Text(a.title, style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    text = a.title,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.combinedClickable(onLongClick = { copyTextToClipboard(context,
+                                        a.title.ifBlank { "" })},onClick={})
+                                )
                             } else {
                                 OutlinedTextField(
                                     value = editTitle,
@@ -330,7 +340,12 @@ fun AnimeDetailScreen(
                             if (!isEditing) {
                                 Text("简介", style = MaterialTheme.typography.titleSmall)
                                 val displayDesc = a.description.ifBlank { "目前没有简介哦" }
-                                Text(displayDesc, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    text=displayDesc,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.combinedClickable(onLongClick = { copyTextToClipboard(context,
+                                        a.description.ifBlank { "" })},onClick={})
+                                )
                             } else {
                                 OutlinedTextField(
                                     value = editDesc,

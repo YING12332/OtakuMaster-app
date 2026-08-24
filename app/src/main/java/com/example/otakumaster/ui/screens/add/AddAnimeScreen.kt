@@ -126,7 +126,7 @@ fun AddAnimeScreen(
                                             val anime = repo.createAnime(
                                                 title = t,
                                                 description = description.trim()
-                                                    .ifBlank { "目前没有简介哦" },
+                                                    .ifBlank { "" },
                                                 currentStatus = event,             // 状态
                                                 tags = selectedTags.toList(),
                                                 seriesId = seriesId,

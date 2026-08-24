@@ -56,6 +56,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import android.util.Log
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.Alignment
 
 import androidx.core.content.ContextCompat
 class MainActivity : ComponentActivity() {
@@ -578,20 +580,44 @@ private fun MainApp() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            if (showBottomBar) {//只在3个主页面时才显示导航栏
-                Box(Modifier.navigationBarsPadding()) {
-                    SlidingBottomBar(navController = navController)
-                }
-            }
-        },
-        contentWindowInsets = WindowInsets.safeDrawing
-    ) { innerPadding ->
+//    Scaffold(
+//        modifier = Modifier.fillMaxSize(),
+//        bottomBar = {
+//            if (showBottomBar) {//只在3个主页面时才显示导航栏
+//                Box(Modifier.navigationBarsPadding()) {
+//                    SlidingBottomBar(navController = navController)
+//                }
+//            }
+//        },
+//        contentWindowInsets = WindowInsets.safeDrawing
+//    ) { innerPadding ->
+//        AppNavHost(
+//            navController = navController,
+//            modifier = Modifier.padding(innerPadding)
+//        )
+//    }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // 页面区域的尺寸始终保持不变
         AppNavHost(
             navController = navController,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
         )
+
+        // BottomBar 只是覆盖在页面上，不参与 NavHost 的尺寸计算
+        if (showBottomBar) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+            ) {
+                SlidingBottomBar(
+                    navController = navController
+                )
+            }
+        }
     }
 }
